@@ -8,6 +8,8 @@
 // @match        http://sigeduca.seduc.mt.gov.br/ged/hwgedteladocumento.aspx?0,25
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @license MIT
+// @updateURL    https://github.com/lksoumon/sigeducaFichaAnalitica/raw/main/FichaIndividualAnalitica.user.js
+// @downloadURL  https://github.com/lksoumon/sigeducaFichaAnalitica/raw/main/FichaIndividualAnalitica.user.js
 // @grant        none
 // ==/UserScript==
 
