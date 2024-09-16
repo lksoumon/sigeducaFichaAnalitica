@@ -349,72 +349,97 @@ function MapaDeTodasNotas(dataArray) {
         } else {
             t = dataArray.materias[i];
         }
-
+    
         tabelaHTML += '<th class="rotate"><div><span>' + t + '</span></div></th>';
-
-
-
     }
-    tabelaHTML += '<th class="rotate"><div><span>Total Faltas confimadas</span></div></th>';
+    
+    tabelaHTML += '<th class="rotate"><div><span>Total Faltas confirmadas</span></div></th>';
     tabelaHTML += '</tr></thead><tbody>';
-
-
-
-    Object.keys(dataArray.alunos)
-        .forEach(function eachKey(cod) {//console.log(dataArray.alunos[cod]);
-        var faltaTotal = 0;var spawn;
-        for (var k = 1; k <= 4; k++) {
+    
+    Object.keys(dataArray.alunos).forEach(function eachKey(cod) {
+        var faltaTotal = 0;
+        var spawn;
+        var mediaano = new Array(dataArray.materias.length).fill(0); // Inicializar a média anual com 0 para todas as matérias
+    
+        for (var k = 1; k <= 6; k++) {
             tabelaHTML += '<tr>';
-            if(k==1){
-                spawn = 'rowspan="4"';
-
-                tabelaHTML += '<td '+spawn+' >' + cod + '</td>';
-                tabelaHTML += '<td '+spawn+'>' + dataArray.alunos[cod].dadosAluno.nome + '</td>';
-                tabelaHTML += '<td '+spawn+'>' + dataArray.alunos[cod].resultado + '</td>';
-
-
-             }else{spawn=''}
-
-
-            tabelaHTML += '<td >' + k + 'ºbim</td>';
-            var not = 0; var cor = '';
-            for (var i = 0; i < dataArray.materias.length; i++) {
-                var Valor = '';//console.log(dataArray.alunos[cod].notas[dataArray.materias[i]]);
-                if(dataArray.alunos[cod].notas[dataArray.materias[i]] == undefined){
-                    Valor = '-';
-                }else{
-                    faltaTotal += Number(dataArray.alunos[cod].notas[dataArray.materias[i]].TF);
-                    if(dataArray.alunos[cod].notas[dataArray.materias[i]]['N'+k] == undefined){
+            if (k == 1) {
+                spawn = 'rowspan="6"';
+                tabelaHTML += '<td ' + spawn + ' >' + cod + '</td>';
+                tabelaHTML += '<td ' + spawn + '>' + dataArray.alunos[cod].dadosAluno.nome + '</td>';
+                tabelaHTML += '<td ' + spawn + '>' + dataArray.alunos[cod].resultado + '</td>';
+            } else {
+                spawn = '';
+            }
+    
+            if (k < 5) {
+                tabelaHTML += '<td>' + k + 'ºbim</td>';
+                var cor = '';
+    
+                for (var i = 0; i < dataArray.materias.length; i++) {
+                    var Valor = '';
+    
+                    if (dataArray.alunos[cod].notas[dataArray.materias[i]] == undefined) {
                         Valor = '-';
-                    }else{
-                        Valor = dataArray.alunos[cod].notas[dataArray.materias[i]]['N'+k];
+                    } else {
+                        faltaTotal += Number(dataArray.alunos[cod].notas[dataArray.materias[i]].TF);
+                        if (dataArray.alunos[cod].notas[dataArray.materias[i]]['N' + k] == undefined) {
+                            Valor = '-';
+                        } else {
+                            Valor = dataArray.alunos[cod].notas[dataArray.materias[i]]['N' + k];
+                            if (!isNaN(Valor)) {
+                                mediaano[i] += Number(Valor); // Somar a nota para calcular a média anual
+                            }
+                        }
                     }
-                    //console.log(item,  dataArray.alunos[cod].notas[dataArray.materias[i]]['N1']   );
+    
+                    if (stringas.includes(Valor)) {
+                        cor = corStringas[Valor];
+                    } else {
+                        var cc = parseFloat(Valor);
+                        var not = cc.toFixed(1);
+                        cc = Math.round(cc);
+                        cor = corNotas[cc];
+                    }
+    
+                    tabelaHTML += '<td style="text-align:center;background-color: ' + cor + '">' + Valor + '</td>';
                 }
+            } else if (k == 5) {
+                tabelaHTML += '<td>Média</td>';
+                for (var i = 0; i < dataArray.materias.length; i++) {
+                    var mediaFinal = (mediaano[i] / 4).toFixed(2); // Calcula a média anual e arredonda para 2 casa decimal
 
+                    if (mediaFinal == 0){
+                        tabelaHTML += '<td style="text-align:center;background-color: lightblue ">-</td>';
+                    } else {
+                        tabelaHTML += '<td style="text-align:center;background-color: lightblue ">' + mediaFinal + '</td>';
+                    }
 
-                if (stringas.includes(Valor)) {
-                    cor = corStringas[Valor];
-                    not = Valor;
-                } else {
-                    var cc = parseFloat(Valor);
-                    not = cc.toFixed(1);
-                    cc = Math.round(cc);
-                    cor = corNotas[cc];
                 }
+            } else {
+                tabelaHTML += '<td>P/Aprov.</td>';
+                for (var i = 0; i < dataArray.materias.length; i++) {
+                    var mediaApr = (24 - (mediaano[i])).toFixed(2); // Calcula a média anual e arredonda para 2 casa decimal
 
+                    if (mediaApr == 24){
+                        tabelaHTML += '<td style="text-align:center;background-color: lightblue ">-</td>';
+                    } else if (mediaApr < 0){
+                        tabelaHTML += '<td style="text-align:center;background-color: lightblue ">AP</td>';
+                    }else {
+                        tabelaHTML += '<td style="text-align:center;background-color: lightblue ">' + mediaApr + '</td>';
+                    }
 
-                tabelaHTML += '<td style="text-align:center;background-color: '+cor+'">' + Valor + '</td>';
+                }
             }
-
-            if(k==1){
-                tabelaHTML += '<td '+spawn+' style="text-align:center;background-color: white">' +( faltaTotal - Number(dataArray.alunos[cod].dadosAluno.faltasJust) )+ '</td>';
+    
+            if (k == 1) {
+                tabelaHTML += '<td ' + spawn + ' style="text-align:center;background-color: white">' + (faltaTotal - Number(dataArray.alunos[cod].dadosAluno.faltasJust)) + '</td>';
             }
-
+    
             tabelaHTML += '</tr>';
-            }
-
+        }
     });
+    
 
 
 
