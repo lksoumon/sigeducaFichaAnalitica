@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
