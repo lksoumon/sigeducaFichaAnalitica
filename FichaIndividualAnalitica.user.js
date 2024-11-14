@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -213,7 +213,7 @@ function coletarDados(){
 }
 function MapaDeNotas(dataArray,item,titulo) {
     // Abrir uma nova janela
-    var windowFeatures = 'width=1000,height=800';
+    var windowFeatures = 'width=100%,height=800';
     var novaJanela = window.open('', '_blank',windowFeatures);
 
 
@@ -504,6 +504,54 @@ function semNotas(bim,dataArray){
 }
 
 
+function migrarNotas(bim,dataArray){
+
+    var stringOutput = '{';
+    var notaB = '';
+
+    Object.keys(dataArray.alunos).forEach(function(key) {
+        //console.log(dataArray.alunos[key].notas);
+
+        //if(dataArray.alunos[key].resultado == "CURSANDO"){
+            //arrayOutput[key+' - '+dataArray.alunos[key].dadosAluno.nome] = '';
+            Object.keys(dataArray.alunos[key].notas).forEach(function(keyM) {
+                console.log(keyM + ': ', 'N'+bim,dataArray.alunos[key].notas[keyM]['N'+bim]);
+                //for (var i = 1; i <= bim; i++) {
+                    if(dataArray.alunos[key].notas[keyM]['N'+bim] != "-" && dataArray.alunos[key].notas[keyM]['N'+bim] != undefined ){
+                        notaB = dataArray.alunos[key].notas[keyM]['N'+bim].replace(".", ",");
+
+                        stringOutput = stringOutput +"'"+keyM+"':'" + notaB +"',";
+
+                        //arrayOutput[key+' - '+dataArray.alunos[key].dadosAluno.nome]= arrayOutput[key+' - '+dataArray.alunos[key].dadosAluno.nome]+ `- ${keyM}: ${i}º bimestre sem nota<br>`;
+
+
+                    }
+                //}
+
+            });
+
+        //}
+    });
+
+    stringOutput = stringOutput + "}";
+    stringOutput = stringOutput.replace(",}", "}");
+    console.log(stringOutput);
+
+     // Cria um elemento de texto temporário para copiar
+    const tempInput = document.createElement("textarea");
+    tempInput.value = stringOutput;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999); // Para dispositivos móveis
+    try {
+        document.execCommand("copy");
+        alert("Notas Copiadas - Agora cole no lançamento de notas usando outro sript");
+    } catch (err) {
+      console.error('Erro ao copiar: ', err);
+    }
+
+
+}
 (function() {
 
     'use strict';
@@ -624,7 +672,48 @@ function semNotas(bim,dataArray){
 
     menuContainer.appendChild(document.createElement('hr'));
 
+// opções Secrertario ------------------------- -------------------------------------
+    var tttt23 = document.createElement('div');
+    tttt23.textContent = 'Migrar notas ⬇️';
+    tttt23.style.backgroundColor= '#242420';
+    tttt23.className = "menu-item";
+     tttt23.addEventListener('click', function() {
+        //console.log('foi');
+           if(optMigrarNotas.style.display == 'none'){
+              optMigrarNotas.style.display = 'block';
+               tttt23.textContent = 'Migrar notas ⬆️';
+           }else{
+               optMigrarNotas.style.display = 'none';
+               tttt23.textContent = 'Migrar notas ⬇️';
+           }
+        });
+    menuContainer.appendChild(tttt23);
 
+
+    var optMigrarNotas = document.createElement('div');
+    optMigrarNotas.style.display = 'none';
+
+
+    opcaos = [ "Copiar 1º Bimestre", "Copiar 2º Bimestre", "Copiar 3º Bimestre", "Copiar 4º Bimestre"];
+    variva = [ "1", "2", "3", "4"];
+    for (var k = 0; k < opcaos.length; k++) {
+        (function(nome) {
+            nome = opcaos[k];var vvv = variva[k];
+            subButton = document.createElement('div');
+            subButton.className = "menu-item";
+            subButton.textContent = nome;
+            subButton.addEventListener('click', function() {
+                migrarNotas(vvv,infos);
+                //console.log(vvv);
+            });
+            optMigrarNotas.appendChild(subButton);
+        })(k);
+    }
+
+
+    menuContainer.appendChild(optMigrarNotas);
+
+    menuContainer.appendChild(document.createElement('hr'));
 
     document.body.appendChild(menuContainer);
 
