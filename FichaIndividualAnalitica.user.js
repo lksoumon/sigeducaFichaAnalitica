@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -213,13 +213,13 @@ function coletarDados(){
 }
 function MapaDeNotas(dataArray,item,titulo) {
     // Abrir uma nova janela
-    var windowFeatures = 'width=100%,height=800';
+    var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
     var novaJanela = window.open('', '_blank',windowFeatures);
 
 
     var stringas = ['AVC','INT','BAS','-'];
     var corStringas={'AVC':'#baf235','INT':'#f2a735','BAS':'#f72525','-':'#919bab'};
-    var corNotas=['#f72525','#f72525','#f72525','#f73e25','#f73e25','#f73e25','#f2a735','#b3f538','#b3f538','#baf235','#94f51d'];
+    var corNotas=['#f72525','#f72525','#f72525','#f73e25','#f73e25','#f73e25','#b3f538','#b3f538','#94f51d','#94f51d','#94f51d'];
 
 
     var tabelaHTML = `
@@ -315,13 +315,13 @@ function MapaDeNotas(dataArray,item,titulo) {
 }
 function MapaDeTodasNotas(dataArray) {
     // Abrir uma nova janela
-    var windowFeatures = 'width=1000,height=800';
+    var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
     var novaJanela = window.open('', '_blank',windowFeatures);
 
 
     var stringas = ['AVC','INT','BAS','-'];
     var corStringas={'AVC':'#baf235','INT':'#f2a735','BAS':'#f72525','-':'#919bab'};
-    var corNotas=['#f72525','#f72525','#f72525','#f73e25','#f73e25','#f73e25','#f2a735','#b3f538','#b3f538','#baf235','#94f51d'];
+    var corNotas=['#f72525','#f72525','#f72525','#f72525','#f72525','#f73e25','#f2a735','#b3f538','#b3f538','#baf235','#94f51d'];
 
 
     var tabelaHTML = `
@@ -398,7 +398,7 @@ function MapaDeTodasNotas(dataArray) {
                     } else {
                         var cc = parseFloat(Valor);
                         var not = cc.toFixed(1);
-                        cc = Math.round(cc);
+                        cc = Math.floor(cc);
                         cor = corNotas[cc];
                     }
     
@@ -486,7 +486,7 @@ function semNotas(bim,dataArray){
     });
 
         // Abrir uma nova janela
-    var windowFeatures = 'width=1000,height=800';
+    var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
     var novaJanela = window.open('', '_blank',windowFeatures);
     var turmaUnica = dataArray.dadosTurma.turma + ' - ' + dataArray.dadosTurma.turno;
     var semNotaHTML = `<h1>${turmaUnica}</h1><h2>Alunos sem lançamentos de nota até o ${bim}º bimestre</h2>`;
