@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.40
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -216,11 +216,12 @@ function MapaDeNotas(dataArray,item,titulo) {
     var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
     var novaJanela = window.open('', '_blank',windowFeatures);
 
-
+    let porcentagemDisciplina =[];
     var stringas = ['AVC','INT','BAS','-'];
     var corStringas={'AVC':'#baf235','INT':'#f2a735','BAS':'#f72525','-':'#919bab'};
     var corNotas=['#f72525','#f72525','#f72525','#f73e25','#f73e25','#f73e25','#b3f538','#b3f538','#94f51d','#94f51d','#94f51d'];
-
+    var resultadoStringas = ['TRANSF. ESCOLA - MAT. PROGRE. PARC.','TRANSF. ESCOLA - MAT. EXTRAORD.','RECLASSIFICADO','APROVADO','REPROVADO','REPROVADO POR FALTA','TRANSFERIDO DA ESCOLA','TRANSFERIDO DA TURMA','PROGRESSÃO PARCIAL','MATRÍCULA EXTRAORDINÁRIA','AFASTADO POR DESISTÊNCIA','EM PROGRESSÃO'];
+    var corResultado={'TRANSF. ESCOLA - MAT. PROGRE. PARC.':'#919bab','TRANSF. ESCOLA - MAT. EXTRAORD.':'#919bab','RECLASSIFICADO':'#919bab','AFASTADO POR DESISTÊNCIA':'#f28e30','MATRÍCULA EXTRAORDINÁRIA':'#d9d168','APROVADO':'#5665db','REPROVADO':'#cc5718','REPROVADO POR FALTA':'#cc5718','TRANSFERIDO DA ESCOLA':'#919bab','TRANSFERIDO DA TURMA':'#919bab','PROGRESSÃO PARCIAL':'#6cbfcc','EM PROGRESSÃO':'#6cbfcc'}
 
     var tabelaHTML = `
   <style type="text/css">
@@ -237,10 +238,9 @@ function MapaDeNotas(dataArray,item,titulo) {
     tabelaHTML += '<th>Codigo</th><th>nome</th><th>Situa.</th>';
  
 
-
-
-
     for (var i = 0; i < dataArray.materias.length; i++) {
+        porcentagemDisciplina.push(0);
+
         var t = '';
         if (dataArray.materias[i].length > 21) {
             t = dataArray.materias[i].substring(0, 21) + '...';
@@ -254,6 +254,7 @@ function MapaDeNotas(dataArray,item,titulo) {
 
     }
     tabelaHTML += '<th class="rotate"><div><span>Total Faltas confimadas</span></div></th>';
+    tabelaHTML += '<th class="rotate"><div><span>Qtde. Notas abaixo da média</span></div></th>';
     tabelaHTML += '</tr></thead><tbody>';
 
 
@@ -264,7 +265,15 @@ function MapaDeNotas(dataArray,item,titulo) {
         tabelaHTML += '<tr>';
         tabelaHTML += '<td>' + cod + '</td>';
         tabelaHTML += '<td>' + dataArray.alunos[cod].dadosAluno.nome + '</td>';
-         tabelaHTML += '<td>' + dataArray.alunos[cod].resultado + '</td>';
+        var corRes = 'white';
+        if (resultadoStringas.includes(dataArray.alunos[cod].resultado)) {
+            //alert('foi');
+            corRes = corResultado[dataArray.alunos[cod].resultado];
+        }else{corRes = 'white';}
+
+        let qtdeVermelha = 0;
+
+         tabelaHTML += '<td style="text-align:center;background-color: '+corRes+'">' +  dataArray.alunos[cod].resultado + '</td>';
         var not = 0; var cor = '';
          for (var i = 0; i < dataArray.materias.length; i++) {
               var Valor = '';//console.log(dataArray.alunos[cod].notas[dataArray.materias[i]]);
@@ -276,6 +285,8 @@ function MapaDeNotas(dataArray,item,titulo) {
                       Valor = '-';
                   }else{
                       Valor = dataArray.alunos[cod].notas[dataArray.materias[i]][item];
+
+
                   }
                  //console.log(item,  dataArray.alunos[cod].notas[dataArray.materias[i]]['N1']   );
              }
@@ -289,17 +300,36 @@ function MapaDeNotas(dataArray,item,titulo) {
                  not = cc.toFixed(1);
                  cc = Math.round(cc);
                  cor = corNotas[cc];
+
+                 if(cc<6){
+                      qtdeVermelha ++;
+                      porcentagemDisciplina[i]++;
+                      }
              }
 
 
              tabelaHTML += '<td style="text-align:center;background-color: '+cor+'">' + Valor + '</td>';
          }
         tabelaHTML += '<td style="text-align:center;background-color: '+'white'+'">' +( faltaTotal - Number(dataArray.alunos[cod].dadosAluno.faltasJust) )+ '</td>';
+
+        let corQtdeVermelha = 'white';
+        if(qtdeVermelha > 0 && qtdeVermelha <= 4 ){corQtdeVermelha = 'yellow';}
+        if(qtdeVermelha > 4 ){corQtdeVermelha = 'red';}
+
+        tabelaHTML += '<td style="text-align:center;background-color: '+corQtdeVermelha+'">' +( qtdeVermelha )+ '</td>';
         tabelaHTML += '</tr>';
     });
 
+    const porcentagens = porcentagemDisciplina.map(valor => Math.round((valor / Object.keys(dataArray.alunos).length) * 100) + "%");
 
-
+    console.log(porcentagens);
+    tabelaHTML += '<td style="text-align:center;">%</td>';
+    tabelaHTML += '<td>Porcentagem de notas abaixo da média</td>';
+    tabelaHTML += '<td style="text-align:center;">por disciplina</td>';
+    for (const p of porcentagens) {
+        //console.log(p);
+        tabelaHTML += '<td style="text-align:center;background-color: '+'white'+'">' + p + '</td>';
+    }
 
         tabelaHTML += '</tbody></table>';
 
@@ -406,8 +436,8 @@ function MapaDeTodasNotas(dataArray) {
                 }
             } else if (k == 5) {
                 tabelaHTML += '<td>Média</td>';
-                for (var i = 0; i < dataArray.materias.length; i++) {
-                    var mediaFinal = (mediaano[i] / 4).toFixed(2); // Calcula a média anual e arredonda para 2 casa decimal
+                for (var t = 0; t < dataArray.materias.length; t++) {
+                    var mediaFinal = (mediaano[t] / 4).toFixed(2); // Calcula a média anual e arredonda para 2 casa decimal
 
                     if (mediaFinal == 0){
                         tabelaHTML += '<td style="text-align:center;background-color: lightblue ">-</td>';
@@ -418,8 +448,8 @@ function MapaDeTodasNotas(dataArray) {
                 }
             } else {
                 tabelaHTML += '<td>P/Aprov.</td>';
-                for (var i = 0; i < dataArray.materias.length; i++) {
-                    var mediaApr = (24 - (mediaano[i])).toFixed(2); // Calcula a média anual e arredonda para 2 casa decimal
+                for (var u = 0; u < dataArray.materias.length; u++) {
+                    var mediaApr = (24 - (mediaano[u])).toFixed(2); // Calcula a média anual e arredonda para 2 casa decimal
 
                     if (mediaApr == 24){
                         tabelaHTML += '<td style="text-align:center;background-color: lightblue ">-</td>';
