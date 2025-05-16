@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.40
+// @version      1.43
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -89,7 +89,6 @@ function coletarDados(){
     var output = {'dadosTurma':{},'alunos':{},'materias':[]};
     var tabelas =$('[id=content]');
     var escola = tabelas[0].getElementsByTagName("table")[2].getElementsByTagName("span")[2].textContent;
-
     var dadosTurma = document.getElementById("content").getElementsByTagName("p")[5].textContent;
 
     var aluno = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[2].textContent.trim();
@@ -124,6 +123,7 @@ function coletarDados(){
     output["dadosTurma"]["turno"] = turno;
     output["dadosTurma"]["ano"] = ano;
     output["dadosTurma"]["escola"] = escola.split(" - ")[0].trim();
+    output["dadosTurma"]["nomeEscola"] = escola.split(" - ")[1].trim();
     output['alunos'][codigo]['resultado'] = document.getElementById("content").getElementsByTagName("table")[5].getElementsByTagName("span")[17].textContent.trim();
 
 
@@ -582,6 +582,197 @@ function migrarNotas(bim,dataArray){
 
 
 }
+
+function gerarPCA(dataArray,nome){
+    // Abrir uma nova janela
+    var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
+    var novaJanela = window.open('', '_blank',windowFeatures);
+    var escola = dataArray.dadosTurma.nomeEscola;
+    var turma = dataArray.dadosTurma.turma;
+    var turno = dataArray.dadosTurma.turno;
+    var serie = dataArray.dadosTurma.serie;
+
+    var tabelaHTML = `
+  <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Plano de Recomposição</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    h1, h2, h3, h4 {
+      text-align: center;
+      margin: 4px 0;
+    }
+    .titulo {
+      margin-top: 30px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .subtitulo {
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .info {
+      margin: 20px 0;
+      font-size: 13px;
+    }
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 8px;
+      font-size: 11px;
+    }
+    table {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .assinaturas {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+    }
+    .assinatura {
+      text-align: center;
+      width: 30%;
+    }
+    .assinatura div {
+      border-top: 1px solid #000;
+      margin-top: 60px;
+    }
+    .assinatura-centro {
+      text-align: center;
+      width: 100%;
+      margin-top: 60px;
+    }
+    .assinatura-centro div {
+      border-top: 1px solid #000;
+      width: 50%;
+      margin: 0 auto;
+      margin-top: 60px;
+    }
+    .final {
+      margin-top: 40px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align: center;">
+    <img alt="" src="http://sigeduca.seduc.mt.gov.br/geral/imagem/BRASAO.jpg" width="55" height="46">
+  </div>
+
+  <h2>Governo de Mato Grosso</h2>
+  <h3>SECRETARIA DE ESTADO DE EDUCAÇÃO</h3>
+  <h4>SAGR — Secretaria Adjunta de Gestão Regional</h4>
+  <h4>SAGE — Secretaria Adjunta de Gestão Educacional</h4>
+
+  <div class="titulo">ANEXO I</div>
+  <div class="subtitulo">Plano de Recomposição da Aprendizagem e Compensação de Ausências</div>
+
+  <div class="info">
+    Unidade Escolar: <strong>${escola}</strong><br>
+    Estudante: <strong>${nome}</strong> &nbsp;&nbsp; ano/série: <strong>${serie} - ${turma}</strong> &nbsp;&nbsp; Turno: <strong>${turno}</strong><br><br>
+    Período de compensação da ausência (período que o estudante faltou):<br>
+    Data de início: ___/___/______ até a data ___/___/______<br><br>
+    Atividades Desenvolvidas:
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Componente Curricular</th>
+        <th>Habilidade/Objeto de conhecimento em defasagem de aprendizagem diagnosticadas</th>
+        <th>Atividade de recomposição realizada</th>
+        <th>Observação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+`;
+
+
+
+
+
+    for (var i = 0; i < dataArray.materias.length; i++) {
+
+        var t = '';
+        if (dataArray.materias[i].length > 21) {
+            t = dataArray.materias[i].substring(0, 21) + '...';
+        } else {
+            t = dataArray.materias[i];
+        }
+        tabelaHTML += `<tr>
+        <td></td><td>${t}</td><td></td><td></td><td></td>
+      </tr>`;
+
+
+    }
+
+
+    tabelaHTML += `</tbody>
+  </table>
+
+  <table>
+    <tr>
+      <th>AVALIAÇÃO (considerando o período de ausências)</th>
+    </tr>
+    <tr>
+      <td>
+        (  ) o estudante, neste período, realizou as atividades propostas, porém necessita de continuidade no trabalho com as habilidades indicadas;<br><br>
+        (  ) o estudante, neste período, realizou as atividades propostas e consolidou as habilidades;<br><br>
+        (  ) o estudante não realizou as atividades propostas.
+      </td>
+    </tr>
+  </table>
+
+  <span><strong>Validação:</strong></span>
+
+  <div class="assinaturas">
+    <div class="assinatura">
+      <div></div>
+      Professor Regente <br> Componente Curricular
+    </div>
+    <div class="assinatura">
+      <div></div>
+      Professor Regente <br> Componente Curricular
+    </div>
+    <div class="assinatura">
+      <div></div>
+      Professor Regente <br> Componente Curricular
+    </div>
+  </div>
+
+  <div class="assinatura-centro">
+    <div></div>
+    Coordenador(a) Pedagógico(a)
+  </div>
+
+  <div class="final">
+    Justificativa inserida no sistema SigEduca em ___/___/______ <br><br>
+    Validado pelo Conselho de Classe em ___/___/______
+  </div>
+
+</body>
+</html>
+`;
+
+
+
+        // Adicionar tabela ao conteúdo da nova janela
+        novaJanela.document.write(tabelaHTML);
+
+}
+
+
 (function() {
 
     'use strict';
@@ -702,6 +893,10 @@ function migrarNotas(bim,dataArray){
 
     menuContainer.appendChild(document.createElement('hr'));
 
+    console.log(Object.keys(infos.alunos).length);
+    var qtdeAlunos = Object.keys(infos.alunos).length;
+
+    if (qtdeAlunos = 1){
 // opções Secrertario ------------------------- -------------------------------------
     var tttt23 = document.createElement('div');
     tttt23.textContent = 'Migrar notas ⬇️';
@@ -742,8 +937,30 @@ function migrarNotas(bim,dataArray){
 
 
     menuContainer.appendChild(optMigrarNotas);
-
     menuContainer.appendChild(document.createElement('hr'));
+
+    //----- plano de composição
+const primeiraChave = Object.keys(infos.alunos)[0];
+const nome = infos.alunos[primeiraChave].dadosAluno.nome;
+console.log(nome); // Ana
+
+
+
+    var tttt25 = document.createElement('div');
+    tttt25.textContent = 'Gerar Plano de Recomposição ➡️';
+    tttt25.style.backgroundColor= '#242420';
+    tttt25.className = "menu-item";
+    tttt25.addEventListener('click', function() {
+        console.log('foi');
+        gerarPCA(infos,nome);
+
+    });
+    menuContainer.appendChild(tttt25);
+
+
+}
+
+    
 
     document.body.appendChild(menuContainer);
 
