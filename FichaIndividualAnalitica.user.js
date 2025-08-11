@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.46
+// @version      1.47
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -784,19 +784,26 @@ function removeTransf(dataArray){
             console.log(tabelas[k]);
              // Remove a primeira div
             var primeiraDiv = tabelas[k];
-            primeiraDiv.remove();
+            
 
             // Remove a próxima div (se existir)
             let proximaDiv = primeiraDiv.nextElementSibling;
-            if (proximaDiv && proximaDiv.tagName === 'DIV') {
-                proximaDiv.remove();
+            console.log(proximaDiv);
+            proximaDiv.remove();
+            if (proximaDiv && proximaDiv.tagName == 'div') {
+                console.lgo('foi');
+                //proximaDiv.remove();
             }
 
             // Remove o próximo <br> (se existir)
             let proximoElemento = primeiraDiv.nextElementSibling;
-            if (proximoElemento && proximoElemento.tagName === 'BR') {
-                proximoElemento.remove();
+            console.log(proximoElemento);
+            proximoElemento.remove();
+            if (proximoElemento && proximoElemento.tagName == 'br') {
+                //proximoElemento.remove();
+                console.lgo('foi');
             }
+            primeiraDiv.remove();
         }
 
 
