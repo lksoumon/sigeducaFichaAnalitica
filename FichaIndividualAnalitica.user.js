@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.43
+// @version      1.44
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -773,6 +773,38 @@ function gerarPCA(dataArray,nome){
 }
 
 
+function removeTransf(dataArray){
+
+    var stringOutput = '{';
+    var notaB = '';
+    var result;
+    var tabelas =$('[id=content]');
+    for (let k = 1; k < tabelas.length; k++) {
+        if(tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[17].textContent.trim() == "TRANSFERIDO DA ESCOLA" || tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[17].textContent.trim() == "TRANSFERIDO DA TURMA"){
+            console.log(tabelas[k]);
+             // Remove a primeira div
+            var primeiraDiv = tabelas[k];
+            primeiraDiv.remove();
+
+            // Remove a próxima div (se existir)
+            let proximaDiv = primeiraDiv.nextElementSibling;
+            if (proximaDiv && proximaDiv.tagName === 'DIV') {
+                proximaDiv.remove();
+            }
+
+            // Remove o próximo <br> (se existir)
+            let proximoElemento = primeiraDiv.nextElementSibling;
+            if (proximoElemento && proximoElemento.tagName === 'BR') {
+                proximoElemento.remove();
+            }
+        }
+
+
+    }
+
+    alert("Fichas de alunos transferidos de turma e de escola removidos");
+}
+
 (function() {
 
     'use strict';
@@ -956,6 +988,17 @@ console.log(nome); // Ana
 
     });
     menuContainer.appendChild(tttt25);
+    menuContainer.appendChild(document.createElement('hr'));
+    var tttt26 = document.createElement('div');
+    tttt26.textContent = 'Remover fichas de alunos transferidos ➡️';
+    tttt26.style.backgroundColor= '#242420';
+    tttt26.className = "menu-item";
+    tttt26.addEventListener('click', function() {
+        console.log('foi');
+        removeTransf(infos);
+
+    });
+    menuContainer.appendChild(tttt26);
 
 
 }
