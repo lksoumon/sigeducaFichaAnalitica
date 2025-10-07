@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.47
+// @version      1.49
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -56,28 +56,39 @@ function parseTable(htmlCode) {
 }
 function pegaCabecalho(dados){
 
-    var cabecalho = []; var calcBimes = 1;
+    var cabecalho = []; var calcBimes = 1; var calcOdds = 1;
     //var dadosCabec = document.getElementById("content").getElementsByTagName("table")[4].getElementsByTagName("tr");
     var dadosCabec = dados;
+    //console.log(dados);
         for (let u = 0; u < dadosCabec[0].getElementsByTagName("td").length; u++) {
 
             if(dadosCabec[0].getElementsByTagName("td")[u].rowSpan == 2){
                 cabecalho.push(dadosCabec[0].getElementsByTagName("td")[u].getElementsByTagName("span")[0].textContent.trim());
             }
 
-            if(dadosCabec[0].getElementsByTagName("td")[u].rowSpan == 1){
-                if(dadosCabec[1].getElementsByTagName("td").length % 2 === 0){
-                    cabecalho.push("N"+calcBimes,"F"+calcBimes);
-                }else{
-                    cabecalho.push("N"+calcBimes);
-                }
+            if(dadosCabec[0].getElementsByTagName("td")[u].rowSpan == 1 && dadosCabec[0].getElementsByTagName("td")[u].colSpan==2){
+                cabecalho.push("N"+calcBimes,"F"+calcBimes);
                 calcBimes++;
             }
+            if(dadosCabec[0].getElementsByTagName("td")[u].rowSpan == 1 && dadosCabec[0].getElementsByTagName("td")[u].colSpan==1){
+                cabecalho.push("NR"+calcOdds);
+                calcOdds++;
+            }
+
+           // if(dadosCabec[0].getElementsByTagName("td")[u].rowSpan == 1){
+           //     if(dadosCabec[1].getElementsByTagName("td").length % 2 === 0){
+           //         cabecalho.push("N"+calcBimes,"F"+calcBimes);
+           //     }else{
+           //         cabecalho.push("N"+calcBimes);
+           //     }
+           //     calcBimes++;
+           // }
 
 
             //console.log(dadosCabec[0].getElementsByTagName("td")[u].getElementsByTagName("span")[0].textContent.trim());
 
         }
+    //console.log(cabecalho);
     return cabecalho;
 }
 function coletarDados(){
@@ -98,7 +109,12 @@ function coletarDados(){
     var nascimento = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[22].textContent.trim();
 
 
-    output['alunos'][codigo] = {'notas':{},'resultado':'','dadosAluno':{'nome':aluno,'matricula':matricula,'faltasJust':faltJust,'nascimento':nascimento}};
+    var spans = document.getElementById("content").getElementsByTagName("p")[6].getElementsByTagName("span");
+    var obs = spans[spans.length - 1].textContent.trim();
+
+
+
+    output['alunos'][codigo] = {'notas':{},'resultado':'','dadosAluno':{'nome':aluno,'matricula':matricula,'totalFaltas':0,'faltasJust':faltJust,'nascimento':nascimento,'obs':obs}};
 
 
     var infos = dadosTurma.split("\n");
@@ -130,12 +146,19 @@ function coletarDados(){
     let result = parseTable(document.getElementById("content").getElementsByTagName("table")[4].outerHTML);
     //console.log(result);
 
-
+    //console.log([...result[1]]);
 
     var compara = 0;
     for (let i = 0; i < result.length; i++) {
-        compara= result[0].length + (result[1].length / 2);
+        compara = 0;
+        let qtdN = result[1].filter(v => String(v).trim() == "N").length;
+        let qtdC = result[1].filter(v =>String(v).trim() == "C").length;
+        let qtdNC = result[1].filter(v => String(v).trim() == "N/C").length;
+
+        compara= result[0].length + result[1].length - qtdN - qtdC - qtdNC;
+        //compara= result[0].length + (result[1].length / 2);
         compara = Math.floor(compara);
+
 
         if(i==0 || i==1){
             continue;
@@ -158,6 +181,9 @@ function coletarDados(){
         //console.log(result[i]);console.log(infoCabecalho);
         for (let j = 1; j < result[i].length; j++) {
             output.alunos[codigo].notas[result[i][0]][infoCabecalho[j]] = result[i][j];
+            if(infoCabecalho[j] == "TF"){
+                    output['alunos'][codigo]['dadosAluno']['totalFaltas'] = output['alunos'][codigo]['dadosAluno']['totalFaltas'] + Number(result[i][j]);
+            }
         }
 
         //output['alunos'][codigo]['notas'].push(result[i]);
@@ -177,13 +203,25 @@ function coletarDados(){
         matricula = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[37].textContent.trim();
         faltJust = tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[10].textContent.trim();
         nascimento = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[22].textContent.trim();
+
+        spans = tabelas[k].getElementsByTagName("p")[6].getElementsByTagName("span");
+        obs = spans[spans.length - 1].textContent.trim();
+
+
         //console.log(codigo);
         if( output['alunos'][codigo] ){}else{
-            output['alunos'][codigo] = {'notas':{},'resultado':'','dadosAluno':{'nome':aluno,'matricula':matricula,'faltasJust':faltJust,'nascimento':nascimento}};
+            output['alunos'][codigo] = {'notas':{},'resultado':'','dadosAluno':{'nome':aluno,'matricula':matricula,'totalFaltas':0,'faltasJust':faltJust,'nascimento':nascimento,'obs':obs}};
         }
         compara = 0;
         for (let i = 0; i < result.length; i++) {
-            compara= result[0].length + (result[1].length / 2);
+            //compara= result[0].length + (result[1].length / 2);
+            let qtdN = result[1].filter(v => String(v).trim() == "N").length;
+            let qtdC = result[1].filter(v =>String(v).trim() == "C").length;
+            let qtdNC = result[1].filter(v => String(v).trim() == "N/C").length;
+
+            compara= result[0].length + result[1].length - qtdN - qtdC - qtdNC;
+            //compara= result[0].length + (result[1].length / 2);
+            compara = Math.floor(compara);
 
             if(i==0 || i==1){
                 continue;
@@ -202,6 +240,11 @@ function coletarDados(){
             //console.log(result[i]);console.log(infoCabecalho);
             for (let j = 1; j < result[i].length; j++) {
                 output.alunos[codigo].notas[result[i][0]][infoCabecalho[j]] = result[i][j];
+
+                if(infoCabecalho[j] == "TF"){
+                    output['alunos'][codigo]['dadosAluno']['totalFaltas'] = output['alunos'][codigo]['dadosAluno']['totalFaltas'] + Number(result[i][j]);
+                }
+
             }
 
 
