@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.50
+// @version      1.51
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -856,58 +856,61 @@ function removeTransf(dataArray){
 }
 
 
-function gerarLista(dataArray){
-    // Abrir uma nova janela
-    var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
-    var novaJanela = window.open('', '_blank',windowFeatures);
+function gerarLista(dataArray) {
+  // Abrir uma nova janela
+  var windowFeatures = `width=${screen.width},height=${screen.height}`;
+  var novaJanela = window.open('', '_blank', windowFeatures);
 
+  var tabelaHTML = `
+    <style type="text/css">
+      thead { display: table-header-group; }
+    </style>
+  `;
 
+  tabelaHTML += `<h3 style="text-align:center;">${dataArray.dadosTurma.turma} ${dataArray.dadosTurma.turno}</h3>`;
+  tabelaHTML += `<table border="1">
+    <thead>
+      <tr>
+        <th>Código</th><th>Nome</th><th>Situa.</th><th>Nascimento</th><th>Idade</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
 
+  // Ordenar os alunos por nome
+  const alunosOrdenados = Object.entries(dataArray.alunos)
+    .sort((a, b) => a[1].dadosAluno.nome.localeCompare(b[1].dadosAluno.nome, 'pt', { sensitivity: 'base' }));
 
-    var tabelaHTML = `
-  <style type="text/css">
-    thead { display: table-header-group; }
-  </style>
-`;
+  // Gerar linhas da tabela
+  alunosOrdenados.forEach(([cod, aluno]) => {
+    tabelaHTML += `<tr>`;
+    tabelaHTML += `<td>${cod}</td>`;
+    tabelaHTML += `<td>${aluno.dadosAluno.nome}</td>`;
+    tabelaHTML += `<td>${aluno.resultado}</td>`;
+    tabelaHTML += `<td>${aluno.dadosAluno.nascimento}</td>`;
 
-    tabelaHTML += '<h3 style="text-align:center;">'+dataArray.dadosTurma.turma+' '+dataArray.dadosTurma.turno+'</h3>';
-    tabelaHTML += '<table border="1"><thead><tr>';
-    tabelaHTML += '<th>Codigo</th><th>nome</th><th>Situa.</th><th>Nascimento</th><th>Idade</th>    </tr>';
+    let nascimento = aluno.dadosAluno.nascimento.trim();
+    let hoje = new Date();
+    let [diaNasc, mesNasc, anoNasc] = nascimento.split('/').map(Number);
 
-    Object.keys(dataArray.alunos)
-        .forEach(function eachKey(cod) {//console.log(dataArray.alunos[cod]);
-        var faltaTotal = 0;
-        tabelaHTML += '<tr>';
-        tabelaHTML += '<td>' + cod + '</td>';
-        tabelaHTML += '<td>' + dataArray.alunos[cod].dadosAluno.nome + '</td>';
-        tabelaHTML += '<td>' + dataArray.alunos[cod].resultado + '</td>';
-        tabelaHTML += '<td>' + dataArray.alunos[cod].dadosAluno.nascimento + '</td>';
+    let idade = hoje.getFullYear() - anoNasc;
+    if (
+      hoje.getMonth() + 1 < mesNasc ||
+      (hoje.getMonth() + 1 === mesNasc && hoje.getDate() < diaNasc)
+    ) {
+      idade--;
+    }
 
-        let nascimento = dataArray.alunos[cod].dadosAluno.nascimento.trim();
-        let hoje = new Date();
+    tabelaHTML += `<td>${idade}</td>`;
+    tabelaHTML += `</tr>`;
+  });
 
-        let [diaNasc, mesNasc, anoNasc] = nascimento.split('/').map(Number);
+  tabelaHTML += `</tbody></table>`;
 
-        let idade = hoje.getFullYear() - anoNasc;
-        if (
-            hoje.getMonth() + 1 < mesNasc ||
-            (hoje.getMonth() + 1 === mesNasc && hoje.getDate() < diaNasc)
-        ) {
-            idade--;
-        }
-
-        tabelaHTML += '<td>' + idade + '</td>';
-        tabelaHTML += '</tr>';
-
-    });
-
-     tabelaHTML += '</tbody></table>';
-
-        // Adicionar tabela ao conteúdo da nova janela
-        novaJanela.document.write(tabelaHTML);
-
-
+  // Exibir a tabela
+  novaJanela.document.write(tabelaHTML);
 }
+
 
 
 (function() {
