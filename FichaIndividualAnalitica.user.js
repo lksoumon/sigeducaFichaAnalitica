@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ficha Individual Analítica
 // @namespace    http://tampermonkey.net/
-// @version      1.49
+// @version      1.50
 // @description  Ferramentas para analisar a ficha individual do GPE/Sigeduca
 // @author       Lucas S Monteiro
 // @require https://code.jquery.com/jquery-3.6.0.min.js
@@ -855,6 +855,61 @@ function removeTransf(dataArray){
     alert("Fichas de alunos transferidos de turma e de escola removidos");
 }
 
+
+function gerarLista(dataArray){
+    // Abrir uma nova janela
+    var windowFeatures = 'width=${screenWidth},height=${screenHeight}';
+    var novaJanela = window.open('', '_blank',windowFeatures);
+
+
+
+
+    var tabelaHTML = `
+  <style type="text/css">
+    thead { display: table-header-group; }
+  </style>
+`;
+
+    tabelaHTML += '<h3 style="text-align:center;">'+dataArray.dadosTurma.turma+' '+dataArray.dadosTurma.turno+'</h3>';
+    tabelaHTML += '<table border="1"><thead><tr>';
+    tabelaHTML += '<th>Codigo</th><th>nome</th><th>Situa.</th><th>Nascimento</th><th>Idade</th>    </tr>';
+
+    Object.keys(dataArray.alunos)
+        .forEach(function eachKey(cod) {//console.log(dataArray.alunos[cod]);
+        var faltaTotal = 0;
+        tabelaHTML += '<tr>';
+        tabelaHTML += '<td>' + cod + '</td>';
+        tabelaHTML += '<td>' + dataArray.alunos[cod].dadosAluno.nome + '</td>';
+        tabelaHTML += '<td>' + dataArray.alunos[cod].resultado + '</td>';
+        tabelaHTML += '<td>' + dataArray.alunos[cod].dadosAluno.nascimento + '</td>';
+
+        let nascimento = dataArray.alunos[cod].dadosAluno.nascimento.trim();
+        let hoje = new Date();
+
+        let [diaNasc, mesNasc, anoNasc] = nascimento.split('/').map(Number);
+
+        let idade = hoje.getFullYear() - anoNasc;
+        if (
+            hoje.getMonth() + 1 < mesNasc ||
+            (hoje.getMonth() + 1 === mesNasc && hoje.getDate() < diaNasc)
+        ) {
+            idade--;
+        }
+
+        tabelaHTML += '<td>' + idade + '</td>';
+        tabelaHTML += '</tr>';
+
+    });
+
+     tabelaHTML += '</tbody></table>';
+
+        // Adicionar tabela ao conteúdo da nova janela
+        novaJanela.document.write(tabelaHTML);
+
+
+}
+
+
 (function() {
 
     'use strict';
@@ -1038,6 +1093,7 @@ console.log(nome); // Ana
 
     });
     menuContainer.appendChild(tttt25);
+
     menuContainer.appendChild(document.createElement('hr'));
     var tttt26 = document.createElement('div');
     tttt26.textContent = 'Remover fichas de alunos transferidos ➡️';
@@ -1049,6 +1105,18 @@ console.log(nome); // Ana
         menuContainer.style.display = 'none';
     });
     menuContainer.appendChild(tttt26);
+
+    menuContainer.appendChild(document.createElement('hr'));
+    var tttt27 = document.createElement('div');
+    tttt27.textContent = 'Gerar lista de alunos por situação, idade e transf.';
+    tttt27.style.backgroundColor= '#242420';
+    tttt27.className = "menu-item";
+    tttt27.addEventListener('click', function() {
+        console.log('foi');
+        gerarLista(infos);
+        menuContainer.style.display = 'none';
+    });
+    menuContainer.appendChild(tttt27);
 
 
 }
