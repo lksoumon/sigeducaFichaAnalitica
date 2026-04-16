@@ -103,10 +103,10 @@ function coletarDados(){
     var dadosTurma = document.getElementById("content").getElementsByTagName("p")[5].textContent;
 
     var aluno = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[2].textContent.trim();
-    var codigo = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[26].textContent.trim();
-    var matricula = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[37].textContent.trim();
-    var faltJust = document.getElementById("content").getElementsByTagName("table")[5].getElementsByTagName("span")[10].textContent.trim();
-    var nascimento = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[22].textContent.trim();
+    var codigo = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[24].textContent.trim();
+    var matricula = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[24].textContent.trim();
+    var faltJust = document.getElementById("content").getElementsByTagName("table")[5].getElementsByTagName("span")[8].textContent.trim();
+    var nascimento = document.getElementById("content").getElementsByTagName("table")[3].getElementsByTagName("span")[20].textContent.trim();
 
 
     var spans = document.getElementById("content").getElementsByTagName("p")[6].getElementsByTagName("span");
@@ -140,7 +140,7 @@ function coletarDados(){
     output["dadosTurma"]["ano"] = ano;
     output["dadosTurma"]["escola"] = escola.split(" - ")[0].trim();
     output["dadosTurma"]["nomeEscola"] = escola.split(" - ")[1].trim();
-    output['alunos'][codigo]['resultado'] = document.getElementById("content").getElementsByTagName("table")[5].getElementsByTagName("span")[17].textContent.trim();
+    output['alunos'][codigo]['resultado'] = document.getElementById("content").getElementsByTagName("table")[5].getElementsByTagName("span")[14].textContent.trim();
 
 
     let result = parseTable(document.getElementById("content").getElementsByTagName("table")[4].outerHTML);
@@ -198,11 +198,11 @@ function coletarDados(){
 
         //console.log(result);
         //console.log(tabelas[k]);
-        codigo = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[26].textContent.trim();
+        codigo = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[24].textContent.trim();
         aluno = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[2].textContent.trim();
-        matricula = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[37].textContent.trim();
-        faltJust = tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[10].textContent.trim();
-        nascimento = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[22].textContent.trim();
+        matricula = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[24].textContent.trim();
+        faltJust = tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[8].textContent.trim();
+        nascimento = tabelas[k].getElementsByTagName("table")[3].getElementsByTagName("span")[20].textContent.trim();
 
         spans = tabelas[k].getElementsByTagName("p")[6].getElementsByTagName("span");
         obs = spans[spans.length - 1].textContent.trim();
@@ -230,7 +230,7 @@ function coletarDados(){
             if(result[i].length == compara){//console.log('foi');
                 result[i].shift();
             }
-            output['alunos'][codigo]['resultado'] = tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[17].textContent.trim();
+            output['alunos'][codigo]['resultado'] = tabelas[k].getElementsByTagName("table")[5].getElementsByTagName("span")[14].textContent.trim();
 
 
             output.alunos[codigo].notas[result[i][0]] = {};
@@ -300,10 +300,12 @@ function MapaDeNotas(dataArray,item,titulo) {
     tabelaHTML += '<th class="rotate"><div><span>Qtde. Notas abaixo da média</span></div></th>';
     tabelaHTML += '</tr></thead><tbody>';
 
+    Object.entries(dataArray.alunos)
+        .sort((a, b) => a[1].dadosAluno.nome.localeCompare(b[1].dadosAluno.nome, 'pt', { sensitivity: 'base' }))
+        .forEach(function eachKey([cod, value]) {
 
-
-    Object.keys(dataArray.alunos)
-        .forEach(function eachKey(cod) {//console.log(dataArray.alunos[cod]);
+//    Object.keys(dataArray.alunos)
+//        .forEach(function eachKey(cod) {//console.log(dataArray.alunos[cod]);
         var faltaTotal = 0;
         tabelaHTML += '<tr>';
         tabelaHTML += '<td>' + cod + '</td>';
@@ -917,7 +919,7 @@ function gerarLista(dataArray) {
 
     'use strict';
     var infos = coletarDados();
-    console.log(infos);
+    console.log('infos',infos);
 
     //criarMenu(infos);
     //MapaDeNotas(infos);
